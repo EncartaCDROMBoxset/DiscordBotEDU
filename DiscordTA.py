@@ -34,7 +34,7 @@ from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = "NTMxMjExNzE5NjgzMzQyMzM2.DxKrKg.6y0H8HgSHe8djlwip9eUkn3RsiM"
+botToken = "LOL DANGIT"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
