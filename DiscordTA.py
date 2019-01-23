@@ -53,11 +53,20 @@ qa = deque([])
 
 @bot.command(pass_context = True)
 async def q(ctx):
+	global qa
 	qa.append((ctx.message.author, "NA"))
 	await bot.say("Added your question to the queue")
 
 @bot.command(pass_context = True)
+async def a(ctx):
+	#TODO: Check role of author
+	global qa
+	nextQuestion = qa.popleft()
+	await bot.say(str(nextQuestion[0]) + " asks:\n" + nextQuestion[1])
+
+@bot.command(pass_context = True)
 async def sq(ctx):
+	#TODO: if the queue is empty, say a short response
 	responseString = ""
 	global qa
 	for question in qa:
