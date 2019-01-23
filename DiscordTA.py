@@ -54,7 +54,10 @@ qa = deque([])
 @bot.command(pass_context = True)
 async def q(ctx):
 	global qa
-	qa.append((ctx.message.author, "NA"))
+	question = ctx.message.content.split("!q")
+	print("question:")
+	print(question)
+	qa.append((ctx.message.author, question[1]))
 	await bot.say("Added your question to the queue")
 
 @bot.command(pass_context = True)
