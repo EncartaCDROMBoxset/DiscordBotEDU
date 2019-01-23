@@ -31,8 +31,10 @@
 
 import discord
 from discord.ext import commands
+from collections import deque #For Q&A queue
 
-botToken = "DONT FORGET THE BOT TOKEN"
+
+botToken = "NTMxMjExNzE5NjgzMzQyMzM2.DxKrKg.6y0H8HgSHe8djlwip9eUkn3RsiM"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -45,6 +47,23 @@ async def on_ready():
     print("Name: {}".format(bot.user.name))
     print("ID: {}".format(bot.user.id))
     print(list(bot.servers))
+
+###### EDU: Q&A ######
+qa = deque([])
+
+@bot.command(pass_context = True)
+async def q(ctx):
+	qa.append((ctx.message.author, "NA"))
+	await bot.say("Added your question to the queue")
+
+@bot.command(pass_context = True)
+async def sq(ctx):
+	responseString = ""
+	global qa
+	for question in qa:
+		responseString += str(question[0]) + ": " + question[1] + "\n"
+	await bot.say("The QA queue is as follows:\n" + responseString)
+
 
 ###### Events ######
 
