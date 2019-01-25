@@ -49,32 +49,48 @@ async def on_ready():
     print(list(bot.servers))
 
 ###### EDU: Q&A ######
-qa = deque([])
+qa = deque([]) # Manages the questions being asked, FIFO
+qRoleTracker = {} # Used for managing the "question" role
 
 @bot.command(pass_context = True)
 async def q(ctx):
 	global qa
+	global qRoleTracker
+	author = ctx.message.author
 	question = ctx.message.content.split("!q")
 	print("question:\n{}".format(question))
-	qa.append((ctx.message.author, question[1].lstrip()))
+	qa.append((author, question[1].lstrip()))
+	if (author in qRoleTracker):
+		qRoleTracker[author] += 1
+	else:
+		qRoleTracker[author] = 1
 	await bot.say("Added your question to the queue.")
 
 @bot.command(pass_context = True)
 async def a(ctx):
 	#TODO: Check role of author
 	global qa
+	global qRoleTracker
 	nextQuestion = qa.popleft()
-	await bot.say(str(nextQuestion[0]) + " asks:\n" + nextQuestion[1])
+	author = nextQuestion[0]
+	qRoleTracker[author] -= 1
+	if (qRoleTracker[author] == 0):
+		del qRoleTracker[author]
+	await bot.say(str(author) + " asks:\n" + nextQuestion[1])
 
 @bot.command(pass_context = True)
 async def sq(ctx):
 	global qa
+	global qRoleTracker
 	if len(qa) == 0:
 		await bot.say("The Q&A queue is empty.")
 		return
 	responseString = ""
 	for question in qa:
 		responseString += str(question[0]) + ": " + question[1] + "\n"
+	print("qRoleTracker:")
+	for key, value in qRoleTracker.items():
+		print(key, value)
 	await bot.say("The Q&A queue is as follows:\n" + responseString)
 
 
