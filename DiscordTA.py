@@ -34,7 +34,7 @@ from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = "LOL DANGIT"
+botToken = ""
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -55,10 +55,9 @@ qa = deque([])
 async def q(ctx):
 	global qa
 	question = ctx.message.content.split("!q")
-	print("question:")
-	print(question)
-	qa.append((ctx.message.author, question[1]))
-	await bot.say("Added your question to the queue")
+	print("question:\n{}".format(question))
+	qa.append((ctx.message.author, question[1].lstrip()))
+	await bot.say("Added your question to the queue.")
 
 @bot.command(pass_context = True)
 async def a(ctx):
@@ -69,12 +68,14 @@ async def a(ctx):
 
 @bot.command(pass_context = True)
 async def sq(ctx):
-	#TODO: if the queue is empty, say a short response
-	responseString = ""
 	global qa
+	if len(qa) == 0:
+		await bot.say("The Q&A queue is empty.")
+		return
+	responseString = ""
 	for question in qa:
 		responseString += str(question[0]) + ": " + question[1] + "\n"
-	await bot.say("The QA queue is as follows:\n" + responseString)
+	await bot.say("The Q&A queue is as follows:\n" + responseString)
 
 
 ###### Events ######
