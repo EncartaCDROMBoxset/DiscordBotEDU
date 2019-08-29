@@ -36,7 +36,7 @@ from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = "DON'T POST THIS TO THE INTERNET DUMBDUMB"
+botToken = "Not this time"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -219,16 +219,16 @@ async def massDM(ctx):
 	#Fixes usernames with spaces
 	#This is gross. See if you can do it in the below loop
 	for i, name in enumerate(names):
-		while "#" not in names[i]:
+		while "@" not in names[i]:
 			names[i] += " " + names[i+1]
 			del names[i+1]
 
-	print("Second Names:")
-	print(name)
-
 	for name in names:
 		print(name)
-		user = ctx.message.server.get_member_named(name)
+		print(type(name))
+		print(name[2:-1])
+		user = ctx.message.guild.get_member(int(name[2:-1]))
+		print(type(user))
 		# if user == None:
 		# 	print (name, "does not exist on this server.")
 		# 	await ctx.send("user '{}' does not exist.".format(name))
@@ -236,8 +236,8 @@ async def massDM(ctx):
 		# 	print(user, "exists on this server.")
 		# 	#await bot.send_message(ctx.message.channel, "User {} was messaged.".format(name))
 		# 	await bot.send_message(user, text)
-		await ctx.send(ctx.message.channel, "User {} was messaged.".format(name))
-		await bot.send_message(user, text)
+		await ctx.send("User {} was messaged.".format(user.name))
+		await user.send(text)
 	#await ctx.send(text)
 	
 
