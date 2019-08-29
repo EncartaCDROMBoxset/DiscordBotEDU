@@ -7,6 +7,7 @@
 #Awesome writeup on Decorators https://realpython.com/blog/python/primer-on-python-decorators/
 #For helper functions, you have to await coroutine calls to make sure a result is returned. See https://docs.python.org/3/library/asyncio-task.html
 #Using global variable in Python is slightly weird: https://stackoverflow.com/questions/423379/using-global-variables-in-a-function-other-than-the-one-that-created-them
+#Shoutout to https://www.idiotinside.com/2015/03/01/python-lists-as-fifo-lifo-queues-using-deque-collections/
 
 #TODO:
 #-Make getChannels organize by server. Probs use a dictionary here.
@@ -30,11 +31,12 @@
 # ServerName : ([Roles], [Channels])
 
 import discord
+import asyncio
 from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = ""
+botToken = "NTMxMjExNzE5NjgzMzQyMzM2.Dyphjw.vvIAgvVwccLAABuAlFfDSyNsHjs"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -43,16 +45,16 @@ talkChannel = "Channel goes here"
 
 @bot.event
 async def on_ready():
-    print("Bot online.")
-    print("Name: {}".format(bot.user.name))
-    print("ID: {}".format(bot.user.id))
-    print(list(bot.servers))
+	print("Bot online.")
+	print("Name: {}".format(bot.user.name))
+	print("ID: {}".format(bot.user.id))
+	print(list(bot.guilds))
 
-###### EDU: Q&A ######
+###### EDU: Q&A Commands ######
 qa = deque([]) # Manages the questions being asked, FIFO
 qRoleTracker = {} # Used for managing the "question" role
 
-@bot.command(pass_context = True)
+@bot.command()
 async def q(ctx):
 	global qa
 	global qRoleTracker
@@ -64,9 +66,9 @@ async def q(ctx):
 		qRoleTracker[author] += 1
 	else:
 		qRoleTracker[author] = 1
-	await bot.say("Added your question to the queue.")
+	await ctx.send("Added your question to the queue.")
 
-@bot.command(pass_context = True)
+@bot.command()
 async def a(ctx):
 	#TODO: Check role of author
 	global qa
@@ -76,14 +78,14 @@ async def a(ctx):
 	qRoleTracker[author] -= 1
 	if (qRoleTracker[author] == 0):
 		del qRoleTracker[author]
-	await bot.say(str(author) + " asks:\n" + nextQuestion[1])
+	await ctx.send(str(author) + " asks:\n" + nextQuestion[1])
 
-@bot.command(pass_context = True)
+@bot.command()
 async def sq(ctx):
 	global qa
 	global qRoleTracker
 	if len(qa) == 0:
-		await bot.say("The Q&A queue is empty.")
+		await ctx.send("The Q&A queue is empty.")
 		return
 	responseString = ""
 	for question in qa:
@@ -91,55 +93,67 @@ async def sq(ctx):
 	print("qRoleTracker:")
 	for key, value in qRoleTracker.items():
 		print(key, value)
-	await bot.say("The Q&A queue is as follows:\n" + responseString)
+	await ctx.send("The Q&A queue is as follows:\n" + responseString)
 
 
 ###### Events ######
 
-@bot.async_event
-async def on_member_join(newMember):
-	await assignRoleOnJoin(newMember)
+# @bot.async_event
+# @asyncio.coroutine
+# async def on_member_join(newMember):
+# 	await assignRoleOnJoin(newMember)
 
 #Helper for on_member_join
-async def assignRoleOnJoin(user):
-	currentRoles = user.server.roles
-	for role in currentRoles:
-		if role.name == "Guests": #Generalize this here and on the send_message
-			await bot.add_roles(user, role)
-			if talkChannel != "Channel goes here":
-				await bot.send_message(bot.get_channel(talkChannel.id), "{} has joined, added to {}".format(user.name, "Guests"))
-			break
+# async def assignRoleOnJoin(user):
+# 	currentRoles = user.server.roles
+# 	for role in currentRoles:
+# 		if role.name == "Guests": #Generalize this here and on the send_message
+# 			await bot.add_roles(user, role)
+# 			if talkChannel != "Channel goes here":
+# 				await bot.send_message(bot.get_channel(talkChannel.id), "{} has joined, added to {}".format(user.name, "Guests"))
+# 			break
 
 ###### Channels ######
 
 @bot.command()
-async def getChannelsRaw():
-    await bot.say("I can see the following channels: ")
-    await bot.say(list(bot.get_all_channels()))
+async def getChannelsRaw(ctx):
+	await ctx.send("I can see the following channels: ")
+	channelList = list(bot.get_all_channels())
+	for c in channelList:
+		await ctx.send(c)
 
 @bot.command()
-async def getChannels():
-    await bot.say("I can see the following channels: ")
-    channelList = list(bot.get_all_channels())
-    channelString = ""
-    for c in channelList:
-    	channelString += str(c.name) + " in server, " + str(c.server.name) + "\n"
-    await bot.say(channelString)
+async def getChannels(ctx):
+	await ctx.send("I can see the following channels: ")
+	channelList = list(bot.get_all_channels())
+	channelString = ""
+	for c in channelList:
+		channelString += str(c.name) + " in server, " + str(c.guild.name) + "\n"
+	await ctx.send(channelString)
 
-@bot.command(pass_context = True)
+@bot.command()
+async def getChannelIDs(ctx):
+	await ctx.send("I can see the following channels: ")
+	channelList = list(bot.get_all_channels())
+	channelString = ""
+	for c in channelList:
+		channelString += str(c.name) + ", " + str(c.id) + "\n"
+	await ctx.send(channelString)
+
+@bot.command()
 async def setTalkChannel(ctx):
 	global talkChannel 
 	talkChannel = ctx.message.channel
-	await bot.send_message(bot.get_channel(talkChannel.id), "I will post messages here.")
+	await ctx.send("I will post messages here.")
 
 ###### Roles ######
 
-@bot.command(pass_context = True)
+@bot.command()
 async def createRole(ctx):
 	currentRoles = await getRoles(ctx.message.server)
 	rolesToAdd = str(ctx.message.content).split(" ")
 	rolesToAdd.remove("!createRole")
-	await bot.say("You want me to add the following roles: \n" + " | ".join(rolesToAdd))
+	await ctx.send("You want me to add the following roles: \n" + " | ".join(rolesToAdd))
 	responseString = ""
 	for role in rolesToAdd:
 		lowRole = role.lower()
@@ -151,55 +165,57 @@ async def createRole(ctx):
 		else:
 			responseString += role + " doesn't exist yet, so I can create that role.\n"
 	responseString = responseString[:-2]
-	await bot.say(responseString)
+	await ctx.send(responseString)
 
 @bot.command()
-async def getRolesAllServers():
-	await bot.say("I can see the following roles: ")
+async def getRolesAllServers(ctx):
+	await ctx.send("I can see the following roles: ")
 	responseString = ""
-	serverList = list(bot.servers)
+	serverList = list(bot.guilds)
 	for s in serverList:
 		responseString += str(s.name) + "\n"
 		for role in s.roles:
 			if role.is_everyone is not True:
 				responseString += "- " + str(role.name) + "\n"
 		responseString += "\n"
-	await bot.say(responseString)
+	await ctx.send(responseString)
 
-@bot.command(pass_context = True)
+@bot.command()
 async def getRolesThisServer(ctx):
-	await bot.say("I can see the following roles: ")
+	await ctx.send("I can see the following roles: ")
 	responseString = ""
 	for role in ctx.message.server.roles:
 		if role.is_everyone is not True:
 			responseString += "- " + str(role.name) + "\n"
-	await bot.say(responseString)
+	await ctx.send(responseString)
 
 ###### Servers ######
 
 @bot.command()
-async def getServersRaw():
-    await bot.say("I can see the following servers: ")
-    await bot.say(list(bot.servers))
+async def getServersRaw(ctx):
+	await ctx.send("I can see the following servers: ")
+	await ctx.send(list(bot.guilds))
 
 @bot.command()
-async def getServers():
-    await bot.say("I can see the following servers: ")
-    serverList = list(bot.servers)
-    serverString = ""
-    for s in serverList:
-        serverString += "- " + str(s.name) + "\n"
-    await bot.say(serverString)
+async def getServers(ctx):
+	await ctx.send("I can see the following servers: ")
+	serverList = list(bot.guilds)
+	serverString = ""
+	for s in serverList:
+		serverString += "- " + str(s.name) + "\n"
+	await ctx.send(serverString)
 
 ###### Messages ######
 
 #format is !massDM [names] | [message]
-@bot.command(pass_context = True)
+@bot.command()
 async def massDM(ctx):
 	firstHalf, text = str(ctx.message.content).split("|")
 	firstHalf = firstHalf[8:-1]
 	text = text[1:]
 	names = firstHalf.split(" ")
+	# print("Names:")
+	# print(names)
 	#Fixes usernames with spaces
 	#This is gross. See if you can do it in the below loop
 	for i, name in enumerate(names):
@@ -212,14 +228,14 @@ async def massDM(ctx):
 		user = ctx.message.server.get_member_named(name)
 		# if user == None:
 		# 	print (name, "does not exist on this server.")
-		# 	await bot.say("user '{}' does not exist.".format(name))
+		# 	await ctx.send("user '{}' does not exist.".format(name))
 		# else:
 		# 	print(user, "exists on this server.")
 		# 	#await bot.send_message(ctx.message.channel, "User {} was messaged.".format(name))
 		# 	await bot.send_message(user, text)
-		await bot.send_message(ctx.message.channel, "User {} was messaged.".format(name))
+		await ctx.send(ctx.message.channel, "User {} was messaged.".format(name))
 		await bot.send_message(user, text)
-	#await bot.say(text)
+	#await ctx.send(text)
 	
 
 ###### Helpers ######
@@ -244,23 +260,23 @@ async def getRoles(server):
 ###### Dev ######
 
 @bot.command()
-async def test():
-    await bot.say("Hello World!")
-
-@bot.command(pass_context = True)
-async def checkContext(ctx):
-    await bot.say(str(ctx.message.author) + " messaged me from the channel, " 
-                + str(ctx.message.channel) + ", in the server, " 
-                + str(ctx.message.server))
-    await bot.say("They said: \n" + str(ctx.message.content))
+async def test(ctx):
+	await ctx.send("Hello World!")
 
 @bot.command()
-async def checkStatus():
-    await bot.say("is_logged_in: " + str(bot.is_logged_in))
-    await bot.say("is_closed: " + str(bot.is_closed))
+async def checkContext(ctx):
+	await ctx.send(str(ctx.message.author) + " messaged me from the channel, " 
+				+ str(ctx.message.channel) + ", in the server, " 
+				+ str(ctx.message.server))
+	await ctx.send("They said: \n" + str(ctx.message.content))
+
+@bot.command()
+async def checkStatus(ctx):
+	# await ctx.send("is_logged_in: " + str(bot.is_logged_in)) # Deprecated
+	await ctx.send("is_closed: " + str(bot.is_closed))
 
 @bot.command()
 async def tryLogin():
-    await bot.login(botToken)
+	await bot.login(botToken)
 
 bot.run(botToken)
