@@ -36,7 +36,7 @@ from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = "NTMxMjExNzE5NjgzMzQyMzM2.Dyphjw.vvIAgvVwccLAABuAlFfDSyNsHjs"
+botToken = "DON'T POST THIS TO THE INTERNET DUMBDUMB"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -214,14 +214,17 @@ async def massDM(ctx):
 	firstHalf = firstHalf[8:-1]
 	text = text[1:]
 	names = firstHalf.split(" ")
-	# print("Names:")
-	# print(names)
+	print("First Names:")
+	print(names)
 	#Fixes usernames with spaces
 	#This is gross. See if you can do it in the below loop
 	for i, name in enumerate(names):
 		while "#" not in names[i]:
 			names[i] += " " + names[i+1]
 			del names[i+1]
+
+	print("Second Names:")
+	print(name)
 
 	for name in names:
 		print(name)
