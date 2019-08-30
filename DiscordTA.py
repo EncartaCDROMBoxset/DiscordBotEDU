@@ -36,7 +36,7 @@ from discord.ext import commands
 from collections import deque #For Q&A queue
 
 
-botToken = "Not this time"
+botToken = "NTMxMjExNzE5NjgzMzQyMzM2.XWgFZQ.qz_Ugj58IfY4iK2g5ycOzU1FdWE"
 Client = discord.Client() #Do I need this?
 bot_prefix="!"
 bot = commands.Bot(command_prefix = bot_prefix)
@@ -54,6 +54,7 @@ async def on_ready():
 qa = deque([]) # Manages the questions being asked, FIFO
 qRoleTracker = {} # Used for managing the "question" role
 
+#Question. Adds a question to the end of the qa deque.
 @bot.command()
 async def q(ctx):
 	global qa
@@ -68,6 +69,7 @@ async def q(ctx):
 		qRoleTracker[author] = 1
 	await ctx.send("Added your question to the queue.")
 
+#Answer. Removes and displays the questionat the front of the qa deque
 @bot.command()
 async def a(ctx):
 	#TODO: Check role of author
@@ -80,6 +82,7 @@ async def a(ctx):
 		del qRoleTracker[author]
 	await ctx.send(str(author) + " asks:\n" + nextQuestion[1])
 
+#Shows the current state of the QA deque
 @bot.command()
 async def sq(ctx):
 	global qa
@@ -115,6 +118,7 @@ async def sq(ctx):
 
 ###### Channels ######
 
+#Responds with the name of each channel bot can access
 @bot.command()
 async def getChannelsRaw(ctx):
 	await ctx.send("I can see the following channels: ")
@@ -122,6 +126,7 @@ async def getChannelsRaw(ctx):
 	for c in channelList:
 		await ctx.send(c)
 
+#Responds with the name of each channel visible, along with its guild
 @bot.command()
 async def getChannels(ctx):
 	await ctx.send("I can see the following channels: ")
@@ -131,6 +136,7 @@ async def getChannels(ctx):
 		channelString += str(c.name) + " in server, " + str(c.guild.name) + "\n"
 	await ctx.send(channelString)
 
+#Responds with the name of each visible channel, 
 @bot.command()
 async def getChannelIDs(ctx):
 	await ctx.send("I can see the following channels: ")
@@ -214,8 +220,6 @@ async def massDM(ctx):
 	firstHalf = firstHalf[8:-1]
 	text = text[1:]
 	names = firstHalf.split(" ")
-	print("First Names:")
-	print(names)
 	#Fixes usernames with spaces
 	#This is gross. See if you can do it in the below loop
 	for i, name in enumerate(names):
@@ -225,10 +229,7 @@ async def massDM(ctx):
 
 	for name in names:
 		print(name)
-		print(type(name))
-		print(name[2:-1])
 		user = ctx.message.guild.get_member(int(name[2:-1]))
-		print(type(user))
 		# if user == None:
 		# 	print (name, "does not exist on this server.")
 		# 	await ctx.send("user '{}' does not exist.".format(name))
